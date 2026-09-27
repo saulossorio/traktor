@@ -1,0 +1,133 @@
+/* daterange.css — Date-range filter widget
+ * Pairs with daterange.js. Self-contained: local custom properties on
+ * .daterange with their own defaults, no dependency on style.css.
+ */
+
+.daterange {
+  --dr-panel: #ffffff;
+  --dr-border: #e1e1e1;
+  --dr-ink: #1f1f1f;
+  --dr-ink-soft: #6b6b6b;
+  --dr-accent: #00875a;
+  --dr-accent-soft: rgba(0,135,90,0.1);
+  --dr-bad: #d33b3b;
+  --dr-bad-soft: #fdecec;
+  --dr-radius: 8px;
+  --dr-font: 'Cabin', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  font-family: var(--dr-font);
+  color: var(--dr-ink);
+  font-size: 15px;
+}
+.daterange *, .daterange *::before, .daterange *::after {
+  box-sizing: border-box;
+}
+
+/* ---- presets (role="radiogroup") ---- */
+.daterange-presets {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #eef1f5;
+  border-radius: var(--dr-radius);
+}
+.daterange-preset {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dr-ink-soft);
+  padding: 8px 14px;
+  border-radius: calc(var(--dr-radius) - 2px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.daterange-preset:hover {
+  color: var(--dr-ink);
+  background: rgba(0, 0, 0, 0.03);
+}
+.daterange-preset.active {
+  background: var(--dr-panel);
+  color: var(--dr-accent);
+  box-shadow: 0 1px 3px rgba(20, 30, 50, 0.12);
+}
+.daterange-preset:focus-visible {
+  outline: 2px solid var(--dr-accent);
+  outline-offset: 1px;
+}
+
+/* ---- custom range ---- */
+.daterange-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.daterange-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dr-ink-soft);
+  font-weight: 800;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.daterange-input {
+  font: inherit;
+  font-size: 14px;
+  color: var(--dr-ink);
+  border: 1px solid var(--dr-border);
+  border-radius: var(--dr-radius);
+  padding: 8px 12px;
+  background: var(--dr-panel);
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.daterange-input:hover {
+  border-color: #c0c7d2;
+  background: rgba(0, 0, 0, 0.02);
+}
+.daterange-input:focus-visible {
+  outline: none;
+  border-color: var(--dr-accent);
+  box-shadow: 0 0 0 3px var(--dr-accent-soft);
+}
+.daterange-input[aria-invalid="true"] {
+  border-color: var(--dr-bad);
+}
+
+/* ---- error + summary ---- */
+.daterange-error {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dr-bad);
+  background: var(--dr-bad-soft);
+  padding: 8px 12px;
+  border-radius: var(--dr-radius);
+}
+.daterange-error[hidden] {
+  display: none;
+}
+.daterange-summary {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dr-ink-soft);
+}
+
+/* ---- responsive: tablet widths and down ---- */
+@media (max-width: 640px) {
+  .daterange {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .daterange-presets {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

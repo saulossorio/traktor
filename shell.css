@@ -1,0 +1,123 @@
+/* shell.css — App shell / view-switcher component
+ * Pairs with shell.js. Self-contained: all colors/spacing are local custom
+ * properties on .app-shell with their own defaults, so this does not depend
+ * on style.css being loaded. Override any --shell-* variable from a parent
+ * stylesheet (loaded after this one) to reskin without touching this file.
+ */
+
+.app-shell {
+  --shell-header-bg: #ffffff;
+  --shell-panel-bg: #f8f8f8;
+  --shell-border: #e1e1e1;
+  --shell-ink: #1f1f1f;
+  --shell-ink-soft: #6b6b6b;
+  --shell-accent: #00875a;
+  --shell-accent-soft: rgba(0,135,90,0.1);
+  --shell-radius: 8px;
+  --shell-font: 'Cabin', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;           /* no page-level scroll: the shell owns the viewport */
+  font-family: var(--shell-font);
+  color: var(--shell-ink);
+  box-sizing: border-box;
+}
+.app-shell *, .app-shell *::before, .app-shell *::after {
+  box-sizing: border-box;
+}
+
+/* Best-effort: if the shell's container is (or is inside) <body>, drop the
+ * default body margin so the shell truly fills the viewport with no gutter.
+ * Harmless no-op in browsers without :has() support — the shell still fills
+ * 100vh via its own height, just with body's default 8px margin outside it.
+ */
+body:has(.app-shell) {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ---- header (optional) ---- */
+.app-shell-header {
+  flex: none;
+  background: var(--shell-header-bg);
+  border-bottom: 1px solid var(--shell-border);
+  padding: 16px 28px;
+}
+.app-shell-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---- tab bar ---- */
+.app-shell-tabbar {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  background: var(--shell-header-bg);
+  border-bottom: 1px solid var(--shell-border);
+  padding: 0 28px;
+  overflow-x: auto;           /* narrow/tablet widths: tabs scroll horizontally, chrome stays put */
+  scrollbar-width: thin;
+  align-items: center;
+  height: 64px;
+}
+.app-shell-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--shell-ink-soft);
+  padding: 16px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.app-shell-tab:hover {
+  color: var(--shell-ink);
+  background: rgba(0, 0, 0, 0.02);
+}
+.app-shell-tab.active {
+  color: var(--shell-accent);
+  border-bottom-color: var(--shell-accent);
+}
+.app-shell-tab:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* ---- panels ---- */
+.app-shell-panels {
+  flex: 1 1 auto;
+  min-height: 0;               /* required so a flex child can actually scroll instead of overflowing */
+  position: relative;
+  background: var(--shell-panel-bg);
+}
+.app-shell-panel {
+  display: none;
+  height: 100%;
+  overflow-y: auto;            /* only the ACTIVE panel scrolls internally; header/tabs never move */
+  padding: 32px;
+}
+.app-shell-panel.active {
+  display: block;
+}
+.app-shell-panel:focus-visible {
+  outline: none;               /* focusable for keyboard scrolling, but no visible ring on the panel itself */
+}
+
+/* ---- responsive: tablet widths and down ---- */
+@media (max-width: 768px) {
+  .app-shell-header { padding: 14px 20px; }
+  .app-shell-tabbar { padding: 0 16px; height: 60px; }
+  .app-shell-tab { padding: 14px 16px; font-size: 14px; }
+  .app-shell-panel { padding: 24px; }
+}

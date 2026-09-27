@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Performance de Tráfego · GoTraktor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Cabin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="daterange.css">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-title">Dashboard de Performance de Tráfego</div>
+      <div class="brand-sub">Google Ads &amp; Meta Ads: Geração de Leads</div>
+    </div>
+    <div class="status" id="status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Conectando à fonte de dados ao vivo…</span>
+    </div>
+  </div>
+</header>
+
+<div class="global-filters">
+  <div class="controls" id="controls">
+    <div class="control-group">
+      <label id="dateRangeGroupLabel">Período</label>
+      <div class="daterange-compact" id="dateRangeCompact">
+        <button type="button" class="daterange-compact-toggle" id="dateRangeToggle" aria-haspopup="true" aria-expanded="false" aria-controls="dateRangePopover">
+          <span id="dateRangeCompactLabel">Carregando…</span>
+          <svg class="daterange-compact-caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="daterange-popover" id="dateRangePopover" hidden>
+          <div id="dateRangeRoot"></div>
+        </div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label id="channelToggleLabel">Canal</label>
+      <div class="channel-toggle-group" id="channelToggleGroup" role="group" aria-labelledby="channelToggleLabel">
+        <button type="button" class="channel-toggle channel-toggle-google active" data-channel="google" aria-pressed="true">
+          Google<span class="toggle-switch" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="channel-toggle channel-toggle-meta active" data-channel="meta" aria-pressed="true">
+          Meta<span class="toggle-switch" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="errorBanner" class="error-banner hidden"></div>
+
+<div id="shellRoot"></div>
+
+<!-- Each section below is moved into its own shell view panel via `mountPoints`
+     (by id, on init). Their source position in the document doesn't matter.
+     Existing getElementById(...) lookups in app.js keep working unchanged.
+     Split into one small, focused panel per tab (rather than several panels
+     stacked per tab) specifically so every view fits the viewport with no
+     internal scrolling. See shell.js, which supports an arbitrary number of
+     views for exactly this reason. -->
+
+<div id="overviewSection" class="view-inner">
+  <section class="kpi-grid" id="kpiGrid">
+    <!-- KPI cards injected by JS -->
+  </section>
+  <section class="panel">
+    <div class="panel-head">
+      <h2>
+        <span>Investimento &amp; Leads ao longo do tempo</span>
+        <div class="tooltip-container" style="margin-left: auto;">
+          <span class="tooltip-icon">ⓘ</span>
+          <div class="tooltip-text">Investimento diário (barras, eixo esquerdo) vs. leads no CRM (linha, eixo direito).</div>
+        </div>
+      </h2>
+    </div>
+    <div class="chart-wrap chart-tall">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </section>
+</div>
+
+<div id="channelsSection" class="view-inner">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>
+        <span>Comparativo de canais</span>
+        <div class="tooltip-container" style="margin-left: auto;">
+          <span class="tooltip-icon">ⓘ</span>
+          <div class="tooltip-text">Quando o filtro de canal está em um único canal, apenas a linha correspondente é exibida.</div>
+        </div>
+      </h2>
+      <p>Totais do mesmo período lado a lado, por canal.</p>
+    </div>
+    <div class="table-wrap">
+      <table id="channelTable" class="data-table">
+        <thead>
+          <tr>
+            <th>Canal</th>
+            <th><span class="tooltip-container"><span>Investimento</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Soma do investimento em anúncios.</div></span></th>
+            <th><span class="tooltip-container"><span>Participação no investimento</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Percentual do investimento total alocado a este canal.</div></span></th>
+            <th><span class="tooltip-container"><span>Cliques</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Cliques reportados pela plataforma. Inclui cliques fraudulentos.</div></span></th>
+            <th><span class="tooltip-container"><span>Impressões</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Quantas vezes os anúncios foram exibidos.</div></span></th>
+            <th><span class="tooltip-container"><span>CTR</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Taxa de cliques: cliques ÷ impressões.</div></span></th>
+            <th><span class="tooltip-container"><span>CPC</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Custo por clique: investimento ÷ cliques.</div></span></th>
+            <th><span class="tooltip-container"><span>Engajamentos da plataforma*</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Reportado pela plataforma: Google = "Conversões" fracionárias (modeladas por atribuição); Meta = "Conversas de mensagens iniciadas". Nenhum dos dois equivale a um lead no CRM.</div></span></th>
+            <th><span class="tooltip-container"><span>Leads no CRM</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Leads captados no CRM.</div></span></th>
+            <th><span class="tooltip-container"><span>CPL</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Custo por lead: investimento ÷ leads no CRM.</div></span></th>
+            <th><span class="tooltip-container"><span>Taxa de conversão (leads/clique)</span><span class="tooltip-icon">ⓘ</span><div class="tooltip-text">Leads no CRM ÷ cliques.</div></span></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="table-footnote">CPL aqui é sempre investimento ÷ leads reais no CRM. Nunca as "conversões" do Google Ads ou as "conversas de mensagens iniciadas" da Meta. Essas métricas de plataforma superestimam bastante os leads reais; usá-las subestimaria o CPL verdadeiro, de um jeito que poderia distorcer as decisões de orçamento de um gestor de tráfego.</p>
+  </section>
+</div>
+
+<div id="funnelSection" class="view-inner">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>
+        <span>Funil: plataforma de anúncios → lead no CRM</span>
+        <div class="tooltip-container" style="margin-left: auto;">
+          <span class="tooltip-icon">ⓘ</span>
+          <div class="tooltip-text">Os dados de origem não incluem um campo de pipeline/status de lead. Este é o funil que os dados disponíveis permitem reconstruir.</div>
+        </div>
+      </h2>
+    </div>
+    <div class="funnel-grid" id="funnelGrid"></div>
+  </section>
+</div>
+
+<div id="campaignsSection" class="view-inner">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Campanhas do Google: volume de leads</h2>
+      <p id="campaignNote"></p>
+    </div>
+    <div class="chart-wrap chart-tall">
+      <canvas id="campaignChart"></canvas>
+    </div>
+  </section>
+</div>
+
+<div id="regionalSection" class="view-inner">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>
+        <span>Investimento por região</span>
+        <div class="tooltip-container" style="margin-left: auto;">
+          <span class="tooltip-icon">ⓘ</span>
+          <div class="tooltip-text">O Google Ads reporta globalmente (quase todo o investimento desta conta está em estados brasileiros); o Meta Ads reporta para um conjunto menor de estados brasileiros.</div>
+        </div>
+      </h2>
+      <p>Distribuição geográfica do investimento.</p>
+    </div>
+    <div class="region-grid">
+      <div class="chart-wrap">
+        <h3><span class="channel-dot google"></span>Google Ads</h3>
+        <div class="region-chart-canvas">
+          <canvas id="regionGoogleChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <h3><span class="channel-dot meta"></span>Meta Ads</h3>
+        <div class="region-chart-canvas">
+          <canvas id="regionMetaChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="methodologySection" class="view-inner">
+  <section class="panel notes-panel">
+    <div class="panel-head">
+      <h2>Sobre</h2>
+      <p>Como este dashboard foi construído: fonte dos dados e decisões de design.</p>
+    </div>
+    <div class="notes-body" id="notesBodyMethodology">
+      <h4>Objetivos e Contexto</h4>
+      <p>O briefing deste exercício foi um projeto customizado, sem escopo, objetivos ou KPIs específicos definidos com antecedência.</p>
+      <p>Os dados de origem foram entregues como um link vivo para uma Google Sheet, não como um arquivo estático. O dashboard lê a planilha compartilhada diretamente a cada carregamento da página, nas quatro abas de origem (base_gads, base_meta-ads-geral, base_meta-ads-regiao, base_crm), sem arquivo exportado nem etapa manual de reexportação entre as duas partes.</p>
+
+      <h4>Abordagem</h4>
+      <p>A decisão foi construir uma solução customizada, conectada em tempo real à planilha, relativamente completa e cobrindo as métricas mais usadas, com foco em facilitar filtragem, navegação e interação. Essa foi a escolha mais adequada para este caso, em vez de partir direto para uma ferramenta de BI genérica. A construção contou com apoio de IA para ganhar agilidade.</p>
+      <p>A partir do escopo inicial, o projeto passou por rodadas sucessivas de refinamento, das quais resultaram:</p>
+      <ul>
+        <li>Atualização automática a partir da planilha vinculada.</li>
+        <li>Layout de tela única dividido em abas.</li>
+        <li>Filtro por intervalo de datas.</li>
+        <li>Visões analíticas específicas, como o funil.</li>
+      </ul>
+
+      <h4>Design da Interface</h4>
+      <p>O layout inteiro cabe em uma única tela, em todas as abas, por decisão deliberada. Foi pensado para funcionar como algo que um gestor de tráfego consulta operacionalmente, num relance entre uma decisão e outra, não como um relatório para rolar de cima a baixo.</p>
+      <p>A interface passou por várias rodadas de ajuste com base em feedback direto durante a construção: filtros de canal e período como controles visíveis e clicáveis em vez de escondidos atrás de um dropdown, e uma identidade visual alinhada à marca real da GoTraktor em vez de um template genérico.</p>
+      <p>O layout se adapta a diferentes tamanhos de tela e de janela em desktop e laptop. Breakpoints por altura e por largura ajustam espaçamento, tamanho dos gráficos e disposição dos elementos, como as grades de duas colunas do funil e da visão regional, que passam a uma coluna em janelas mais estreitas. A barra de abas rola horizontalmente quando necessário em telas de largura de tablet, e qualquer painel que não caiba por completo passa a rolar internamente. O dashboard não é otimizado para celular: não há breakpoint abaixo de 768px.</p>
+
+      <h4>Observações</h4>
+      <p>Alguns pontos deste dashboard envolvem decisões tomadas além do que os dados brutos informavam:</p>
+      <ul>
+        <li>A planilha de origem não tem um campo de moeda. A formatação em reais (R$) foi inferida a partir do contexto, uma agência brasileira, e não informada pelos dados.</li>
+        <li>O dashboard ainda tem espaço para melhorias. Dado o prazo deste exercício, este é o produto entregue no estado atual.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  Construído por Saul, com apoio da Claude (Anthropic), como exercício para o processo seletivo da GoTraktor. Contato: saulossorio@outlook.com
+</footer>
+
+<script src="shell.js"></script>
+<script src="daterange.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

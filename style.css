@@ -1,0 +1,1033 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Cabin:wght@400;500;600;700&display=swap');
+
+:root{
+  /* GoTraktor brand palette */
+  --brand-primary:#00875a;
+  --brand-secondary:#00875a;
+  --brand-tertiary:#f7931e;
+
+  /* Base palette */
+  --bg:#f8f8f8;
+  --panel:#ffffff;
+  --ink:#1f1f1f;
+  --ink-soft:#6b6b6b;
+  --border:#e1e1e1;
+
+  /* Channel colors — Google red vs. Meta blue: each platform's own real brand color
+     hues from the GoTraktor brand palette, not two shades of blue. Applied
+     everywhere a channel is color-coded (charts, dots, toggle buttons,
+     table rows) — see app.js COLOR for the Chart.js-side counterparts. */
+  --google:#EA4335;
+  --google-soft:#fce8e6;
+  --meta:#0866FF;
+  --meta-soft:#e7f0ff;
+
+  /* Status/category colors */
+  --good:#1e8e5a;
+  --warn:#c9740c;
+  --bad:#d33b3b;
+
+  /* Highlight box (9% alpha brand green) */
+  --highlight-soft:#00875a17;
+
+  /* Spacing & shape */
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:50px;
+  --shadow-soft:0 1px 3px rgba(0,0,0,.1);
+  --shadow-md:0 0 10px rgba(0,0,0,.2);
+
+  /* Typography scale and weights */
+  --font-heading:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-body:'Cabin',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+  /* Type sizes with clear hierarchy */
+  --fs-page-title:42px;
+  --fs-section-title:28px;
+  --fs-panel-title:20px;
+  --fs-label:13px;
+  --fs-body:16px;
+  --fs-small:14px;
+  --fs-tiny:12px;
+}
+
+*{box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:var(--fs-body);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"kern" 1;
+}
+
+/* Page shell layout: topbar + global filter bar + (optional) error banner are
+   fixed-height flex items; #shellRoot (the app-shell view-switcher) takes all
+   remaining vertical space. This is what makes the whole page fit in 100vh
+   with exactly one view scrolling internally, instead of the page scrolling. */
+.topbar, .global-filters, .error-banner, .footer{
+  flex:none;
+}
+#shellRoot{
+  flex:1 1 auto;
+  min-height:0;
+}
+#shellRoot.app-shell{
+  height:auto;
+}
+
+/* Wraps each view's moved-in content so it lines up with the same 1180px
+   reading width the topbar/filter bar use — the shell's own panel already
+   provides the 24px padding. */
+.view-inner{
+  max-width:1180px;
+  margin:0 auto;
+}
+
+/* Global filter bar: date range + channel select, visible above the shell on
+   every view (it is NOT one of the shell's mounted panels). */
+.global-filters{
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  margin-top:8px;
+  margin-bottom:8px;
+}
+
+/* Topbar */
+.topbar{
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-soft);
+}
+.topbar-inner{
+  max-width:1180px;
+  margin:0 auto;
+  padding:8px 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.brand-title{
+  font-family:var(--font-heading);
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:-.015em;
+  color:var(--ink);
+  line-height:1.2;
+}
+.brand-sub{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:2px;
+  font-weight:500;
+  font-family:var(--font-body);
+  line-height:1.3;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:var(--fs-small);
+  color:var(--ink-soft);
+  font-family:var(--font-body);
+}
+.status-dot{
+  position:relative;
+  width:8px;height:8px;border-radius:50%;
+  background:#c9740c;
+  flex:none;
+}
+.status-dot.ok{
+  background:var(--good);
+}
+/* A real pulse: a ring radiates outward from the dot and fades, on a loop,
+   while the dot itself stays solid. Plain opacity fading (the old version)
+   reads as blinking, not pulsing. */
+.status-dot.ok::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:var(--good);
+  animation:pulse-ring 1.6s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+.status-dot.err{
+  background:var(--bad);
+}
+
+@keyframes pulse-ring{
+  0%{transform:scale(1); opacity:0.7;}
+  100%{transform:scale(3); opacity:0;}
+}
+
+.error-banner{
+  background:#fdecec;
+  border:1px solid #f5c5c5;
+  color:#8f2323;
+  padding:16px 20px;
+  border-radius:var(--radius-md);
+  margin:12px 32px;
+  font-size:var(--fs-small);
+  line-height:1.5;
+  font-family:var(--font-body);
+}
+.hidden{display:none;}
+
+/* Controls */
+.controls{
+  max-width:1180px;
+  margin:0 auto;
+  padding:10px 32px;
+  display:flex;
+  align-items:flex-end;
+  gap:32px;
+  flex-wrap:wrap;
+}
+.control-group{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:10px;
+}
+.control-group label{
+  font-family:var(--font-heading);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--ink-soft);
+  font-weight:800;
+  line-height:1.2;
+}
+/* Channel toggle button group */
+.channel-toggle-group{
+  display:inline-flex;
+  gap:8px;
+}
+.channel-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  appearance:none;
+  padding:6px 16px;
+  border-radius:var(--radius-lg);
+  border:1px solid var(--border);
+  background:var(--panel);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.03em;
+  color:var(--ink-soft);
+  cursor:pointer;
+  font-family:var(--font-body);
+  transition:all 0.3s ease;
+}
+.channel-toggle:hover{
+  border-color:#c0c7d2;
+}
+.channel-toggle:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(0,135,90,0.2);
+}
+.channel-toggle:not(.active){
+  opacity:.55;
+}
+.channel-toggle.active{
+  color:var(--ink);
+  border-color:var(--border);
+}
+
+/* Real toggle switch — track + sliding knob, colored per channel when ON,
+   neutral gray when OFF. Replaces the earlier solid-filled "checkbox-style"
+   button — the label text stays plain, the switch alone carries the state. */
+.toggle-switch{
+  position:relative;
+  width:34px;
+  height:18px;
+  border-radius:999px;
+  background:#c7ccd4;
+  flex:none;
+  transition:background .25s ease;
+}
+.toggle-switch::after{
+  content:'';
+  position:absolute;
+  top:2px;
+  left:2px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.35);
+  transition:transform .25s ease;
+}
+.channel-toggle-google.active .toggle-switch{ background:var(--google); }
+.channel-toggle-meta.active .toggle-switch{ background:var(--meta); }
+.channel-toggle.active .toggle-switch::after{
+  transform:translateX(16px);
+}
+
+/* Tooltip system */
+.tooltip-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: help;
+}
+
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tooltip-container:hover .tooltip-icon {
+  background: var(--brand-primary);
+  color: #ffffff;
+}
+
+.tooltip-text {
+  /* Opens DOWNWARD from the icon (not upward): most tooltip icons here sit
+     near the top of their panel (KPI cards, panel headers), and the shell's
+     active-view panel has overflow-y:auto for its internal-scroll fallback —
+     a tooltip popping upward from an icon that close to the panel's top edge
+     was getting clipped by that boundary. Right-aligned, not centered: KPI
+     card icons sit at the card's top-right corner, so centering pushed the
+     box half outside the (narrow) card on both sides; anchoring the tooltip's
+     right edge to the icon keeps it growing into the card, not off of it. */
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(31, 31, 31, 0.95);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: var(--radius-md);
+  white-space: normal;
+  width: max-content;
+  max-width: 280px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+  z-index: 3000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-family: var(--font-body);
+  /* Reset inherited transforms/spacing from ancestors (.kpi-label and
+     .data-table thead th both set text-transform:uppercase + letter-spacing,
+     which was silently inherited down into this box — the real cause of the
+     all-caps tooltip text). */
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.tooltip-text::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  right: 8px;
+  border: 6px solid transparent;
+  border-bottom-color: rgba(31, 31, 31, 0.95);
+}
+
+.tooltip-container:hover .tooltip-text {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* KPI Grid — fixed 6-column layout (there are always exactly 6 cards) rather
+   than auto-fit, which used to wrap a 6th card onto its own second row at
+   this reading width and was the single biggest contributor to the Overview
+   tab overflowing the viewport. Cards shrink instead of wrapping. */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(6, minmax(0,1fr));
+  gap:16px;
+  margin-bottom:16px;
+}
+@media (max-width: 900px){
+  .kpi-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+/* Overview now holds KPIs + the trend chart (moved back in after the trend
+   chart briefly lived on its own tab and left Overview looking empty) — at
+   shorter viewport heights that combination overflows unless chart/panel/card
+   sizing tightens up. Height-keyed, not width-keyed, since this is a vertical
+   fit problem. */
+@media (max-height: 850px){
+  .global-filters{ margin-top:4px; margin-bottom:4px; }
+  .chart-tall{ height:190px; }
+  .chart-wrap canvas{ max-height:190px; }
+  .panel{ padding:16px 24px; margin-bottom:12px; }
+  .kpi-grid{ margin-bottom:12px; }
+  .kpi-card{ padding:12px 16px; }
+  .kpi-value{ font-size:19px; }
+  .kpi-label{ margin-bottom:4px; }
+  .kpi-sub{ margin-top:4px; }
+  /* .notes-panel.panel (not .notes-panel alone) to out-specificity the
+     unconditional ".notes-panel .panel-head p{16px}" rule below (~line 526,
+     later in source order) — equal-specificity selectors would otherwise let
+     the later unconditional rule win even while this media query matches,
+     silently defeating the shrink-fallback. Verified via computed styles. */
+  .notes-panel.panel .panel-head p{ font-size:14px; }
+  /* Funnel's enlarged bar/spacing values (2026-08-13, see the Funnel block
+     below) are tuned for full-height viewports; left alone at short heights
+     they'd reintroduce the internal scrolling the shell's single-panel fit
+     is built to avoid. Pulled back toward (but not all the way to) the
+     pre-enlargement values — same tightening pattern as everything else in
+     this block. */
+  .funnel-bar-track{ height:24px; }
+  .funnel-step{ margin-bottom:16px; }
+  .funnel-drop{ margin-bottom:16px; }
+  .funnel-col h3{ margin-bottom:14px; }
+}
+.kpi-card{
+  background:var(--panel);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-soft);
+  padding:18px 16px;
+  border:1px solid var(--border);
+}
+.kpi-label{
+  font-family:var(--font-heading);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--ink-soft);
+  font-weight:800;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.kpi-label-text {
+  flex: 1;
+}
+.kpi-value{
+  font-family:var(--font-heading);
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:var(--ink);
+  line-height:1.15;
+  overflow-wrap:anywhere;
+}
+.kpi-sub{
+  font-size:var(--fs-tiny);
+  color:var(--ink-soft);
+  margin-top:8px;
+  font-weight:500;
+  font-family:var(--font-body);
+}
+
+/* Panels — each shell view now holds exactly one panel (see index.html /
+   Overview-Trend-Channels-CPL-Funnel-Campaigns-Regional-Methodology
+   split), so padding/margins are sized to fit a single panel inside the
+   shell's fixed-height panel area with no internal scrolling, at both
+   1440x900 and 1280x800. */
+.panel{
+  background:var(--panel);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-soft);
+  border:1px solid var(--border);
+  padding:24px;
+  margin-bottom:20px;
+  transition: all 0.3s ease;
+}
+/* Every current view has a single panel; this drops the trailing margin so
+   it doesn't add unused height to the panel's scrollHeight. */
+.view-inner .panel:last-child{
+  margin-bottom:0;
+}
+.panel-head h2{
+  font-family:var(--font-heading);
+  font-size:var(--fs-panel-title);
+  margin:0 0 6px;
+  font-weight:800;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height:1.2;
+}
+.panel-head p{
+  margin:0 0 14px;
+  color:var(--ink-soft);
+  font-size:var(--fs-small);
+  line-height:1.5;
+  max-width:900px;
+  font-family:var(--font-body);
+}
+.notes-panel .panel-head p{
+  font-size:16px;
+}
+
+.chart-wrap{
+  position:relative;
+  width:100%;
+}
+.chart-wrap h3{
+  font-family:var(--font-heading);
+  font-size:15px;
+  color:var(--ink);
+  margin:0 0 12px;
+  font-weight:800;
+  letter-spacing:.01em;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.chart-tall{height:272px;}
+.chart-wrap canvas{max-height:272px;}
+
+/* Tables */
+.table-wrap{
+  overflow-x:auto;
+  margin:-4px -24px 0;
+  padding:0 24px;
+}
+/* Scroll affordance: edge fade shown only on the side(s) that actually have
+   more content to reveal. Classes are toggled by initTableScrollAffordances()
+   in app.js (scroll position + ResizeObserver), so a table that fits its
+   container gets no mask at all. 40px (wider than the 24px edge padding) so
+   the fade is unambiguous at a glance rather than a barely-there gradient. */
+.table-wrap.is-scrollable-left{
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 40px, black 100%);
+}
+.table-wrap.is-scrollable-right{
+  -webkit-mask-image: linear-gradient(to left, transparent 0, black 40px, black 100%);
+  mask-image: linear-gradient(to left, transparent 0, black 40px, black 100%);
+}
+.table-wrap.is-scrollable-left.is-scrollable-right{
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+}
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  font-family:var(--font-body);
+}
+.data-table th,
+.data-table td{
+  padding:10px 14px;
+  text-align:right;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  font-weight:500;
+}
+.data-table thead th{
+  white-space:normal;
+  min-width:90px;
+}
+.data-table th:first-child,
+.data-table td:first-child{
+  text-align:left;
+}
+.data-table thead th{
+  font-family:var(--font-heading);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--ink-soft);
+  font-weight:800;
+  background:rgba(0,0,0,.01);
+  border-bottom:2px solid var(--border);
+  cursor: help;
+  user-select: none;
+}
+.data-table tbody tr{
+  transition:background-color 0.15s ease;
+  cursor: pointer;
+}
+.channel-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:700;
+  color:var(--ink);
+  font-family:var(--font-body);
+}
+.channel-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  flex:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.6);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.channel-dot.google{background:var(--google);}
+.channel-dot.meta{background:var(--meta);}
+
+.table-footnote{
+  font-size:var(--fs-tiny);
+  color:var(--ink-soft);
+  margin-top:12px;
+  line-height:1.5;
+  margin-left:24px;
+  margin-right:24px;
+  margin-bottom:-24px;
+  padding-bottom:24px;
+  font-family:var(--font-body);
+}
+
+/* Funnel */
+/* Funnel view only: the card's content (2 narrow columns of small bars) was
+   sizing purely to itself inside the shell's full-height panel area, with
+   nothing propagating that available height back up to `.panel` — the
+   result was a large gray gap below the white card (`--shell-panel-bg`
+   showing through). Other tabs don't need this because `.chart-tall`
+   (line ~493) gives them a hard content floor; Funnel has no equivalent, so
+   it gets its own flex-stretch chain instead. Scoped to `#funnelSection`
+   specifically — every other tab's `.panel` keeps its plain shrink-to-content
+   sizing, which is correct for them. `flex:1` on `.panel` (not just
+   `min-height:100%`) is what actually forces the growth: percentage heights
+   don't reliably resolve against a parent sized only via `min-height`, but
+   flex-grow distributes free space independent of that percentage-resolution
+   rule, as long as `#funnelSection` itself has a definite height — which it
+   does, via `.app-shell-panel`'s explicit `height:100%` (shell.css). */
+#funnelSection.view-inner{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+}
+#funnelSection .panel{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:100%;
+  /* Residual slack (card taller than its 2 columns of content actually need)
+     centers the columns as a unit instead of leaving them pinned to the top
+     — reads as intentional breathing room, not a mis-sized card. */
+  justify-content:center;
+}
+.funnel-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px;
+  margin-top:4px;
+}
+@media (max-width: 900px){
+  .funnel-grid, .region-grid {
+    grid-template-columns:1fr;
+  }
+  /* Below the breakpoint the two charts stack into 2 separate rows. Forcing
+     a single `1fr` row (set above for the 2-column desktop layout) would
+     only stretch the FIRST chart-wrap to full height — CSS Grid
+     auto-places the second one into its own implicit, content-sized row —
+     leaving the two charts wildly mismatched, so drop back to
+     content-based rows here, same as every other view. */
+  #regionalSection .region-grid{
+    grid-template-rows:none;
+  }
+}
+
+.funnel-col h3{
+  font-family:var(--font-heading);
+  font-size:16px;
+  margin:0 0 26px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  color:var(--ink);
+}
+.funnel-step{
+  display:grid;
+  /* 150px fits every label now that the one long outlier ("Conversas de
+     mensagens iniciadas" → "Conversas iniciadas") was shortened at the
+     source instead of widening this column to fit it — a wider column left
+     a large dead-space gap before the bar for every short label sharing it.
+     The old fixed 100px value column is gone: the number now lives inside
+     (or, for narrow bars, just outside) the track itself — see
+     .step-value-inline / .step-value-outside below. */
+  grid-template-columns:150px 1fr;
+  align-items:center;
+  column-gap:14px;
+  row-gap:14px;
+  /* Consistent gap before the NEXT step regardless of whether this one has a
+     "% da etapa anterior" caption after it (only 3 of 4 steps do — the first
+     has nothing to compare against). Default handles the no-caption case;
+     when a caption follows, this collapses to a small gap and the caption
+     itself carries the full spacing instead, so the caption reads as
+     attached to its step, with a uniform gap before the next step group. */
+  margin-bottom:35px;
+  font-size:14px;
+  transition: opacity 0.2s ease;
+  font-family:var(--font-body);
+}
+.funnel-step:has(+ .funnel-drop){
+  margin-bottom:2px;
+}
+.funnel-step .step-label{
+  color:var(--ink-soft);
+  font-weight:600;
+}
+.funnel-bar-track{
+  background:#eef1f5;
+  border-radius:6px;
+  height:38px;
+  overflow:hidden;
+  border:1px solid #e0e5eb;
+  transition: box-shadow 0.2s ease;
+  /* position:relative anchors .step-value-outside, whose "left" is set in px
+     by layoutFunnelValues() in app.js at the fill's measured right edge.
+     Extra right padding gives the fallback number room to sit inside the
+     track (not spilling past it) when the fill is narrow. */
+  position:relative;
+  padding-right:8px;
+  display:flex;
+  justify-content:center;
+}
+.funnel-bar-fill{
+  height:100%;
+  border-radius:6px;
+  transition:width 0.3s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+}
+/* Number rendered inside the fill: near-white for contrast against the
+   saturated Google/Meta colors, right-aligned with a small inset so it never
+   touches the bar's rounded edge. Hidden via inline style by
+   layoutFunnelValues() when the fill measures too narrow to hold it. */
+.step-value-inline{
+  color:#fdfdff;
+  font-weight:700;
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  font-family:var(--font-body);
+  text-shadow:0 1px 1px rgba(0,0,0,0.25);
+}
+/* Fallback for bars too narrow to hold the number inside: sits just past the
+   fill's right edge, colored to MATCH the bar (not white/black) so it still
+   reads as "belonging" to that step at a glance, per spec. Positioned
+   absolutely in px by layoutFunnelValues(); hidden by default until JS
+   confirms the inline copy doesn't fit. */
+.step-value-outside{
+  display:none;
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  font-weight:700;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  font-family:var(--font-body);
+}
+.funnel-drop{
+  font-size:11px;
+  color:var(--ink-soft);
+  grid-column:2/3;
+  margin:0 0 35px 0;
+  font-weight:500;
+  font-family:var(--font-body);
+}
+
+/* Regions */
+.region-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px;
+  margin-top:4px;
+}
+/* Regional view: unlike Funnel (#funnelSection, above) — whose bars are
+   fixed-height hand-built <div>s that only need the leftover panel space
+   CENTERED around them — these are Chart.js canvases with
+   responsive:true / maintainAspectRatio:false already set in app.js, so
+   they can actually GROW to fill the available height instead of just
+   being centered in it. That requires every level between the shell panel
+   and the canvas to carry a real, definite size down to it: `.view-inner`
+   and `.panel` get the same stretch chain as Funnel; `.region-grid` then
+   has to participate too — plain CSS Grid rows size to their content by
+   default, so it needs an explicit `1fr` row to actually fill the
+   container instead of just shrinking to fit the two charts; each
+   `.chart-wrap` becomes its own column-flex box so its heading stays
+   fixed-height while the chart area below it grows.
+   The canvas is wrapped in a dedicated `.region-chart-canvas` div rather
+   than sized directly off `.chart-wrap` — Chart.js measures the canvas's
+   DIRECT parent element to decide its render size, and that parent also
+   holds the `<h3>` heading here; without a private wrapper the canvas
+   would be sized against the *whole* chart-wrap box (heading included),
+   overlapping the heading and re-triggering its own resize observer in a
+   loop. `min-height:0` is set at every flex level in this chain (not just
+   the outermost ones, unlike Funnel) — flex items default to
+   `min-height:auto` (their own content's size as a floor), which can stop
+   a canvas-driven flex chain from resizing correctly, or let it creep
+   upward indefinitely; Funnel doesn't need this because its content is
+   fixed-size, but a live-resizing canvas does. `overflow:hidden` on the
+   canvas wrapper is a safety net against exactly that creep. */
+#regionalSection.view-inner{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+}
+#regionalSection .panel{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+}
+#regionalSection .region-grid{
+  flex:1;
+  min-height:0;
+  grid-template-rows:1fr;
+}
+#regionalSection .chart-wrap{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+#regionalSection .region-chart-canvas{
+  flex:1;
+  min-height:0;
+  position:relative;
+  overflow:hidden;
+}
+/* The generic `.chart-wrap canvas{max-height:272px}` rule (above, shared by
+   Trend/Campaigns' fixed-height `.chart-tall` charts) still matches this
+   canvas via descendant selector even through the `.region-chart-canvas`
+   wrapper — it was masked while the narrower 230px `.region-grid canvas`
+   cap (removed above) was the binding constraint. Needs an explicit,
+   higher-specificity override here or the canvas is still capped at 272px
+   regardless of how much flex-grown space is actually available. */
+#regionalSection .region-chart-canvas canvas{
+  max-height:none;
+}
+
+/* Methodology panels — split across 3 tabs (see index.html), each sized to
+   fit the viewport with no internal scrolling. */
+.notes-body{
+  margin-top:4px;
+  font-size:16px;
+  color:var(--ink-soft);
+  line-height:1.55;
+  font-family:var(--font-body);
+}
+.notes-body h4{
+  font-family:var(--font-heading);
+  color:var(--ink);
+  font-size:18px;
+  margin:14px 0 6px;
+  font-weight:800;
+  letter-spacing:-.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notes-body h4:first-child{margin-top:0;}
+.notes-body ul{
+  margin:0 0 0 18px;
+  padding:0;
+}
+.notes-body li{
+  margin-bottom:3px;
+  line-height:1.45;
+}
+.notes-body code{
+  background:#f0f2f6;
+  border-radius:4px;
+  padding:3px 7px;
+  font-size:13px;
+  font-family:'Menlo','Courier New',monospace;
+  color:#d33b3b;
+}
+
+/* Footer */
+.footer{
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:12px;
+  padding:12px 24px;
+  font-weight:500;
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  font-family:var(--font-body);
+}
+
+/* Accessibility & interaction */
+a{color:var(--brand-primary);text-decoration:none;transition: color 0.2s ease;}
+a:hover{text-decoration:underline;color: var(--brand-primary);}
+button, input, select, textarea{font-family:inherit;}
+
+/* Enhanced shell overrides — reinforce GoTraktor brand green in UI chrome */
+.app-shell {
+  --shell-accent: #00875a;
+  --shell-accent-soft: rgba(0,135,90,0.1);
+}
+
+/* shell.css's tab bar has no max-width/centering of its own (it's a generic,
+   reusable component with no opinion on page width) — its 28px padding was
+   the only inset, so on any viewport wider than ~1180px+padding the tabs sat
+   flush-left while the topbar/filters/content above and below it are all
+   centered in the same 1180px column. This makes the tab row's PADDING grow
+   to match that column on wide screens (via `max()`, falls back to the
+   normal 28px on narrow ones) — same alignment, without needing a second
+   wrapper element or touching shell.js/shell.css directly.
+   Also overrides shell.css's hardcoded `height: 64px` down to 44px (spacing
+   pass, 2026-08-13). This selector must stay more specific than plain
+   `.app-shell-tabbar` for the same reason as the `.app-shell-tab` padding
+   override below — shell.css loads AFTER style.css, so at equal specificity
+   it always wins the cascade tie and silently overrides a plain-specificity
+   height rule. Pairs with the `.app-shell-tab` padding-top/bottom override
+   below: shrinking ONLY the tab's own padding without also shrinking this
+   outer bar's fixed height does nothing visually, since the bar height was
+   still pinned regardless. */
+#shellRoot.app-shell .app-shell-tabbar {
+  padding-left: max(28px, calc((100% - 1180px) / 2));
+  padding-right: max(28px, calc((100% - 1180px) / 2));
+  height: 44px;
+}
+
+.app-shell-tab {
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+}
+/* Higher specificity than shell.css's own `.app-shell-tab{padding:16px 20px}`
+   shorthand — shell.css loads AFTER style.css in index.html, so at equal
+   specificity its shorthand always wins and silently overwrites the plain
+   .app-shell-tab rule above (confirmed: same root cause as the earlier
+   tab-bar centering bug). This selector must stay more specific to actually
+   apply. */
+#shellRoot.app-shell .app-shell-tab {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.app-shell-tab.active {
+  border-bottom-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+#shellRoot.app-shell .app-shell-tab:hover {
+  background: rgba(0,135,90,0.04);
+}
+
+/* Enhanced daterange overrides */
+.daterange-preset {
+  transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  font-family: var(--font-body);
+}
+
+.daterange-preset:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.daterange-input {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.2s ease;
+  font-family: var(--font-body);
+}
+
+.daterange-input:hover {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+/* daterange.js renders its own "Showing <date> – <date>" summary line
+   (.daterange-summary) inside the widget — redundant now that the compact
+   toggle button below carries that same information as its label, so it's
+   hidden everywhere rather than left as leftover duplicate text. daterange.js
+   itself is untouched; this is presentation only. */
+.daterange-summary{
+  display:none;
+}
+
+/* Compact date-range dropdown: wraps Devi's untouched daterange.js/css
+   widget. Closed state shows only a single-line button carrying the exact
+   selected period (driven off the widget's onChange/getValue payload in
+   app.js); clicking it opens a popover containing the widget's own presets +
+   custom inputs, unmodified. */
+.daterange-compact{
+  position:relative;
+}
+.daterange-compact-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 14px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--border);
+  background:var(--panel);
+  font-size:var(--fs-small);
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+  font-family:var(--font-body);
+  white-space:nowrap;
+  transition:border-color 0.25s, box-shadow 0.25s, background-color 0.2s;
+}
+.daterange-compact-toggle:hover{
+  border-color:var(--brand-primary);
+  background:var(--panel);
+  box-shadow:0 0 0 2px rgba(0,135,90,0.15);
+}
+.daterange-compact-toggle:focus-visible,
+.daterange-compact.open .daterange-compact-toggle{
+  outline:none;
+  border-color:var(--brand-primary);
+  box-shadow:0 0 0 3px rgba(0,135,90,0.15);
+}
+.daterange-compact-caret{
+  color:var(--brand-primary);
+  flex:none;
+  transition:transform 0.2s ease;
+}
+.daterange-compact.open .daterange-compact-caret{
+  transform:rotate(180deg);
+}
+.daterange-popover{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  z-index:2000;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-md);
+  padding:16px;
+  min-width:360px;
+}
+.daterange-popover[hidden]{
+  display:none;
+}
+/* Inside the popover the widget stacks vertically (presets, then custom
+   inputs) instead of the always-expanded horizontal row it used on the page
+   before — keeps the popover a fixed, compact width regardless of viewport. */
+.daterange-popover .daterange{
+  flex-direction:column;
+  align-items:flex-start;
+  gap:14px;
+}
+.daterange-popover .daterange-presets{
+  width:100%;
+}
+.daterange-popover .daterange-custom{
+  width:100%;
+}
